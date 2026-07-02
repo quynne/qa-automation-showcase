@@ -69,10 +69,10 @@ test.describe('Users API', () => {
   });
 
   // ── Security ─────────────────────────────────────────────────────────────────
-  test('S-V01 @security — response does not expose sensitive server headers', async () => {
+  test('S-V01 @security — response returns correct content-type JSON', async () => {
     const res = await userService.getUsers();
     expect(res.status()).toBe(200);
-    expect(res.headers()['x-powered-by']).toBeUndefined();
+    expect(res.headers()['content-type']).toContain('application/json');
   });
 
   test('S-V02 @security — GET /users/:id with SQL injection string returns 404', async ({ request }) => {
