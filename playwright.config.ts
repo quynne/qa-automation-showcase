@@ -24,7 +24,7 @@ export default defineConfig({
       testDir: './_src/api/tests/users',
       dependencies: ['api-setup'],
       use: {
-        baseURL: process.env.API_BASE_URL ?? 'https://reqres.in',
+        baseURL: process.env.API_BASE_URL ?? 'https://jsonplaceholder.typicode.com',
         extraHTTPHeaders: {
           'Content-Type': 'application/json',
         },

@@ -9,46 +9,57 @@ test.describe('Users API', () => {
   });
 
   // ── Valid ────────────────────────────────────────────────────────────────────
-  test('L-V01 @smoke — GET /users returns paginated list', async () => {
-    const res = await userService.getUsers(1);
+  test('L-V01 @smoke — GET /users returns list of 10 users', async () => {
+    const res = await userService.getUsers();
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty('data');
-    expect(Array.isArray(body.data)).toBe(true);
-    expect(body.data.length).toBeGreaterThan(0);
+    expect(Array.isArray(body)).toBe(true);
+    expect(body.length).toBe(10);
+    expect(body[0]).toHaveProperty('id');
+    expect(body[0]).toHaveProperty('email');
   });
 
-  test('L-V02 — GET /users/:id returns correct user', async () => {
-    const res = await userService.getUserById(2);
+  test('L-V02 @smoke — GET /users/:id returns correct user', async () => {
+    const res = await userService.getUserById(1);
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.data.id).toBe(2);
-    expect(body.data).toHaveProperty('email');
-    expect(body.data).toHaveProperty('first_name');
+    expect(body.id).toBe(1);
+    expect(body).toHaveProperty('name');
+    expect(body).toHaveProperty('email');
+    expect(body).toHaveProperty('username');
   });
 
-  test('C-V01 @smoke — POST /users creates user and returns 201', async () => {
-    const res = await userService.createUser({ name: 'John Doe', job: 'QA Engineer' });
+  test('L-V03 — GET /users/:id/posts returns user posts', async () => {
+    const res = await userService.getUserPosts(1);
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(Array.isArray(body)).toBe(true);
+    expect(body.length).toBeGreaterThan(0);
+    expect(body[0].userId).toBe(1);
+  });
+
+  test('C-V01 — POST /users creates user and returns 201', async () => {
+    const res = await userService.createUser({
+      name: 'Jane QA',
+      username: 'jane_qa',
+      email: 'jane@qa.com',
+    });
     expect(res.status()).toBe(201);
     const body = await res.json();
     expect(body).toHaveProperty('id');
-    expect(body.name).toBe('John Doe');
-    expect(body.job).toBe('QA Engineer');
-    expect(body).toHaveProperty('createdAt');
+    expect(body.name).toBe('Jane QA');
   });
 
   test('U-V01 — PUT /users/:id updates user and returns 200', async () => {
-    const res = await userService.updateUser(2, { name: 'Jane Doe', job: 'Senior QA' });
+    const res = await userService.updateUser(1, { name: 'Updated Name' });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.name).toBe('Jane Doe');
-    expect(body.job).toBe('Senior QA');
-    expect(body).toHaveProperty('updatedAt');
+    expect(body.name).toBe('Updated Name');
   });
 
-  test('D-V01 — DELETE /users/:id returns 204', async () => {
-    const res = await userService.deleteUser(2);
-    expect(res.status()).toBe(204);
+  test('D-V01 — DELETE /users/:id returns 200', async () => {
+    const res = await userService.deleteUser(1);
+    expect(res.status()).toBe(200);
   });
 
   // ── Invalid ──────────────────────────────────────────────────────────────────
@@ -57,27 +68,15 @@ test.describe('Users API', () => {
     expect(res.status()).toBe(404);
   });
 
-  test('L-I02 — GET /users with page=0 returns empty data', async () => {
-    const res = await userService.getUsers(0);
-    expect(res.status()).toBe(200);
-    const body = await res.json();
-    expect(body.data).toHaveLength(0);
-  });
-
   // ── Security ─────────────────────────────────────────────────────────────────
-  test('S-V01 @security — POST /register without password returns 400', async ({ request }) => {
-    const res = await request.post('https://reqres.in/api/register', {
-      data: { email: 'eve.holt@reqres.in' },
-    });
-    expect(res.status()).toBe(400);
-    const body = await res.json();
-    expect(body).toHaveProperty('error');
+  test('S-V01 @security — response does not expose sensitive server headers', async () => {
+    const res = await userService.getUsers();
+    expect(res.status()).toBe(200);
+    expect(res.headers()['x-powered-by']).toBeUndefined();
   });
 
-  test('S-V02 @security — POST /login with wrong credentials returns 400', async ({ request }) => {
-    const res = await request.post('https://reqres.in/api/login', {
-      data: { email: 'wrong@test.com', password: 'wrong' },
-    });
-    expect(res.status()).toBe(400);
+  test('S-V02 @security — GET /users/:id with SQL injection string returns 404', async ({ request }) => {
+    const res = await request.get('/users/1%20OR%201=1');
+    expect(res.status()).toBe(404);
   });
 });

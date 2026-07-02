@@ -1,7 +1,6 @@
 import { test as setup, expect } from '@playwright/test';
 
 setup('api auth setup', async ({ request }) => {
-  // Reqres.in uses token-based auth — verify API is reachable
-  const res = await request.get('https://reqres.in/api/users?page=1');
+  const res = await request.get('https://jsonplaceholder.typicode.com/users');
   expect(res.status()).toBe(200);
 });

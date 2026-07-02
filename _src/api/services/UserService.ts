@@ -2,44 +2,50 @@ import { APIRequestContext } from '@playwright/test';
 
 export interface User {
   id: number;
+  name: string;
+  username: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  avatar: string;
+  phone: string;
+  website: string;
+}
+
+export interface Post {
+  id: number;
+  userId: number;
+  title: string;
+  body: string;
 }
 
 export interface CreateUserPayload {
   name: string;
-  job: string;
-}
-
-export interface CreateUserResponse {
-  id: string;
-  name: string;
-  job: string;
-  createdAt: string;
+  username: string;
+  email: string;
 }
 
 export class UserService {
   constructor(private request: APIRequestContext) {}
 
-  async getUsers(page = 1) {
-    return this.request.get(`/api/users?page=${page}`);
+  async getUsers() {
+    return this.request.get('/users');
   }
 
   async getUserById(id: number) {
-    return this.request.get(`/api/users/${id}`);
+    return this.request.get(`/users/${id}`);
+  }
+
+  async getUserPosts(id: number) {
+    return this.request.get(`/users/${id}/posts`);
   }
 
   async createUser(payload: CreateUserPayload) {
-    return this.request.post('/api/users', { data: payload });
+    return this.request.post('/users', { data: payload });
   }
 
   async updateUser(id: number, payload: Partial<CreateUserPayload>) {
-    return this.request.put(`/api/users/${id}`, { data: payload });
+    return this.request.put(`/users/${id}`, { data: payload });
   }
 
   async deleteUser(id: number) {
-    return this.request.delete(`/api/users/${id}`);
+    return this.request.delete(`/users/${id}`);
   }
 }

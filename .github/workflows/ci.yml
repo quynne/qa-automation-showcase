@@ -36,7 +36,7 @@ jobs:
       - name: Run API tests
         run: npm run test:api
         env:
-          API_BASE_URL: https://reqres.in
+          API_BASE_URL: https://jsonplaceholder.typicode.com
           CI: true
       - name: Upload Allure results
         if: always()
