@@ -1,0 +1,155 @@
+name: QA Automation CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily smoke run at 08:00 UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run typecheck
+
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run API tests
+        run: npm run test:api
+        env:
+          API_BASE_URL: https://reqres.in
+          CI: true
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-allure-results
+          path: reports/allure/
+          retention-days: 14
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results
+          path: reports/test-results.json
+          retention-days: 14
+
+  mobile-tests:
+    name: Mobile Tests (Emulation)
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run mobile tests (Android + iOS emulation)
+        run: npx playwright test --project=mobile-login --project=mobile-android --project=mobile-ios
+        env:
+          BASE_URL: https://www.saucedemo.com
+          UI_USERNAME: standard_user
+          UI_PASSWORD: secret_sauce
+          CI: true
+      - name: Upload mobile results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-allure-results
+          path: reports/allure/
+          retention-days: 14
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-failure-screenshots
+          path: reports/results/
+          retention-days: 7
+
+  ui-tests:
+    name: UI Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run UI tests
+        run: npm run test:ui
+        env:
+          BASE_URL: https://www.saucedemo.com
+          UI_USERNAME: standard_user
+          UI_PASSWORD: secret_sauce
+          CI: true
+      - name: Upload Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-allure-results
+          path: reports/allure/
+          retention-days: 14
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-html-report
+          path: reports/html/
+          retention-days: 14
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-failure-screenshots
+          path: reports/results/
+          retention-days: 7
+
+  publish-report:
+    name: Publish Report to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [api-tests, ui-tests, mobile-tests]
+    if: always() && github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ui-html-report
+          path: reports/html
+      - uses: actions/configure-pages@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: reports/html
+      - id: deployment
+        uses: actions/deploy-pages@v4
