@@ -59,28 +59,15 @@ export default defineConfig({
       },
     },
 
-    // ── Mobile: login setup (Android emulation) ───────────────────────────────
-    {
-      name: 'mobile-login',
-      testDir: './_src/ui/tests/login',
-      testMatch: /auth\.setup\.ts$/,
-      use: {
-        ...devices['Pixel 5'],
-        baseURL: process.env.BASE_URL ?? 'https://www.saucedemo.com',
-        headless: !!process.env.CI,
-        storageState: undefined,
-      },
-    },
-
     // ── Mobile: checkout on Android (Pixel 5 emulation) ──────────────────────
     {
       name: 'mobile-android',
       testDir: './_src/mobile/tests',
-      dependencies: ['mobile-login'],
+      dependencies: ['ui-login'],
       use: {
         ...devices['Pixel 5'],
         baseURL: process.env.BASE_URL ?? 'https://www.saucedemo.com',
-        storageState: './reports/mobile-auth.json',
+        storageState: './reports/ui-auth.json',
         headless: !!process.env.CI,
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
@@ -91,11 +78,11 @@ export default defineConfig({
     {
       name: 'mobile-ios',
       testDir: './_src/mobile/tests',
-      dependencies: ['mobile-login'],
+      dependencies: ['ui-login'],
       use: {
         ...devices['iPhone 14'],
         baseURL: process.env.BASE_URL ?? 'https://www.saucedemo.com',
-        storageState: './reports/mobile-auth.json',
+        storageState: './reports/ui-auth.json',
         headless: !!process.env.CI,
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
