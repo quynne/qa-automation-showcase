@@ -65,7 +65,7 @@ jobs:
       - run: npm install
       - run: npx playwright install --with-deps chromium
       - name: Run mobile tests (Android + iOS emulation)
-        run: npx playwright test --project=ui-login --project=mobile-android --project=mobile-ios
+        run: npx playwright test --project=ui-setup --project=mobile-android --project=mobile-ios
         env:
           BASE_URL: https://www.saucedemo.com
           UI_USERNAME: standard_user
@@ -98,7 +98,7 @@ jobs:
       - run: npm install
       - run: npx playwright install --with-deps chromium
       - name: Run UI tests
-        run: npm run test:ui
+        run: npx playwright test --project=ui-setup --project=ui-login --project=ui-checkout
         env:
           BASE_URL: https://www.saucedemo.com
           UI_USERNAME: standard_user

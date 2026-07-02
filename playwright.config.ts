@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 dotenv.config({ path: '.env.local', override: true });
 
+const UI_BASE = process.env.BASE_URL ?? 'https://www.saucedemo.com';
+const UI_AUTH = './reports/ui-auth.json';
+
 export default defineConfig({
   testDir: './_src',
   timeout: 60_000,
@@ -25,18 +28,28 @@ export default defineConfig({
       dependencies: ['api-setup'],
       use: {
         baseURL: process.env.API_BASE_URL ?? 'https://jsonplaceholder.typicode.com',
-        extraHTTPHeaders: {
-          'Content-Type': 'application/json',
-        },
+        extraHTTPHeaders: { 'Content-Type': 'application/json' },
       },
     },
 
-    // ── UI: login (standalone — no storageState needed) ───────────────────────
+    // ── UI: auth setup (runs first, saves ui-auth.json) ───────────────────────
+    {
+      name: 'ui-setup',
+      testDir: './_src/ui/tests/login',
+      testMatch: /auth\.setup\.ts$/,
+      use: {
+        baseURL: UI_BASE,
+        headless: !!process.env.CI,
+      },
+    },
+
+    // ── UI: login spec tests (standalone, no storageState) ────────────────────
     {
       name: 'ui-login',
       testDir: './_src/ui/tests/login',
+      testMatch: /login\.ui\.spec\.ts$/,
       use: {
-        baseURL: process.env.BASE_URL ?? 'https://www.saucedemo.com',
+        baseURL: UI_BASE,
         headless: !!process.env.CI,
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
@@ -44,14 +57,14 @@ export default defineConfig({
       },
     },
 
-    // ── UI: checkout (depends on login storageState) ──────────────────────────
+    // ── UI: checkout (depends on ui-setup for auth) ───────────────────────────
     {
       name: 'ui-checkout',
       testDir: './_src/ui/tests/checkout',
-      dependencies: ['ui-login'],
+      dependencies: ['ui-setup'],
       use: {
-        baseURL: process.env.BASE_URL ?? 'https://www.saucedemo.com',
-        storageState: './reports/ui-auth.json',
+        baseURL: UI_BASE,
+        storageState: UI_AUTH,
         headless: !!process.env.CI,
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
@@ -59,30 +72,30 @@ export default defineConfig({
       },
     },
 
-    // ── Mobile: checkout on Android (Pixel 5 emulation) ──────────────────────
+    // ── Mobile: Android (Pixel 5 emulation) ──────────────────────────────────
     {
       name: 'mobile-android',
       testDir: './_src/mobile/tests',
-      dependencies: ['ui-login'],
+      dependencies: ['ui-setup'],
       use: {
         ...devices['Pixel 5'],
-        baseURL: process.env.BASE_URL ?? 'https://www.saucedemo.com',
-        storageState: './reports/ui-auth.json',
+        baseURL: UI_BASE,
+        storageState: UI_AUTH,
         headless: !!process.env.CI,
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
       },
     },
 
-    // ── Mobile: checkout on iOS (iPhone 14 emulation) ─────────────────────────
+    // ── Mobile: iOS (iPhone 14 emulation) ────────────────────────────────────
     {
       name: 'mobile-ios',
       testDir: './_src/mobile/tests',
-      dependencies: ['ui-login'],
+      dependencies: ['ui-setup'],
       use: {
         ...devices['iPhone 14'],
-        baseURL: process.env.BASE_URL ?? 'https://www.saucedemo.com',
-        storageState: './reports/ui-auth.json',
+        baseURL: UI_BASE,
+        storageState: UI_AUTH,
         headless: !!process.env.CI,
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
