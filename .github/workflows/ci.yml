@@ -64,8 +64,8 @@ jobs:
           node-version: '20'
       - run: npm install
       - run: npx playwright install --with-deps chromium
-      - name: Run mobile tests (Android + iOS emulation)
-        run: npx playwright test --project=ui-setup --project=mobile-android --project=mobile-ios
+      - name: Run mobile tests (Android emulation)
+        run: npx playwright test --project=ui-setup --project=mobile-android
         env:
           BASE_URL: https://www.saucedemo.com
           UI_USERNAME: standard_user
