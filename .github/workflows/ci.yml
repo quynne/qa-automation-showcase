@@ -19,8 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npm run typecheck
 
   api-tests:
@@ -32,8 +31,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npx playwright install --with-deps chromium
       - name: Run API tests
         run: npm run test:api
@@ -64,8 +62,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npx playwright install --with-deps chromium
       - name: Run mobile tests (Android + iOS emulation)
         run: npx playwright test --project=mobile-login --project=mobile-android --project=mobile-ios
@@ -98,8 +95,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
+      - run: npm install
       - run: npx playwright install --with-deps chromium
       - name: Run UI tests
         run: npm run test:ui
